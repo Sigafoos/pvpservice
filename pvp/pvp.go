@@ -1,7 +1,7 @@
 package pvp
 
 import (
-	//"fmt"
+	"fmt"
 	"log"
 
 	"github.com/gocraft/dbr"
@@ -16,6 +16,10 @@ type Player struct {
 	Server     string `db:"server" json:"server,omitempty"`
 	IGN        string `db:"ign" json:"ign"`
 	FriendCode string `db:"friendcode" json:"friendcode"`
+}
+
+func (p *Player) ToString() string {
+	return fmt.Sprintf("Discord username: %s\nIn-game name: %s\nFriend code: %s\nDiscord user ID: %s\nDiscord server ID: %s", p.Username, p.IGN, p.FriendCode, p.ID, p.Server)
 }
 
 type PVP struct {
