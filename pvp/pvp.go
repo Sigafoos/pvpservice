@@ -19,7 +19,7 @@ type Player struct {
 }
 
 func (p *Player) ToString() string {
-	return fmt.Sprintf("Discord username: %s\nIn-game name: %s\nFriend code: %s\nDiscord user ID: %s\nDiscord server ID: %s", p.Username, p.IGN, p.FriendCode, p.ID, p.Server)
+	return fmt.Sprintf("**FC**: %s | **IGN**: %s | **User**: %s", p.FriendCode, p.IGN, p.Username)
 }
 
 type PVP struct {
