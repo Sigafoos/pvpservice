@@ -31,7 +31,7 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	var user pvp.Row
+	var user pvp.Player
 	err = json.Unmarshal(body, &user)
 	if err != nil {
 		log.Printf("error unmarshalling register body: %s", err)

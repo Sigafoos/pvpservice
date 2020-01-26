@@ -10,7 +10,7 @@ import (
 
 const tableName = "pvp"
 
-type Row struct {
+type Player struct {
 	ID         string `db:"id" json:"id"`
 	Username   string `db:"username" json:"username"`
 	Server     string `db:"server" json:"server,omitempty"`
@@ -37,8 +37,8 @@ func New(db *dbr.Connection, logger dbr.EventReceiver) (*PVP, error) {
 	return pvp, nil
 }
 
-func (pvp *PVP) ListPlayers(server string) []Row {
-	var results []Row
+func (pvp *PVP) ListPlayers(server string) []Player {
+	var results []Player
 
 	session := pvp.db.NewSession(pvp.logger)
 	session.Begin()
@@ -49,7 +49,7 @@ func (pvp *PVP) ListPlayers(server string) []Row {
 	return results
 }
 
-func (pvp *PVP) Register(user Row) error {
+func (pvp *PVP) Register(user Player) error {
 	session := pvp.db.NewSession(pvp.logger)
 	tx, err := session.Begin()
 	if err != nil {
