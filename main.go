@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/Sigafoos/pvpservice/handler"
@@ -55,4 +57,9 @@ func main() {
 	}
 	log.Println("server running on port " + port)
 	log.Println(server.ListenAndServe())
+
+	// gracefully shut down
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	<-sc
 }
