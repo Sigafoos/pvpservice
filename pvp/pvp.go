@@ -2,7 +2,6 @@ package pvp
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/gocraft/dbr"
 	_ "github.com/lib/pq"
@@ -27,18 +26,11 @@ type PVP struct {
 	logger dbr.EventReceiver
 }
 
-func New(db *dbr.Connection, logger dbr.EventReceiver) (*PVP, error) {
-	pvp := &PVP{
+func New(db *dbr.Connection, logger dbr.EventReceiver) *PVP {
+	return &PVP{
 		db:     db,
 		logger: logger,
 	}
-	err := pvp.createDB()
-	if err != nil {
-		log.Println(err)
-		_ = pvp.db.Close()
-		return nil, err
-	}
-	return pvp, nil
 }
 
 func (pvp *PVP) ListPlayers(server string) []Player {
@@ -73,18 +65,4 @@ func (pvp *PVP) Register(user Player) error {
 
 	tx.Commit()
 	return nil
-}
-
-func (pvp *PVP) createDB() error {
-	createSQL := `
-	CREATE TABLE IF NOT EXISTS pvp(
-		id varchar(50) NOT NULL,
-		username varchar(50) NOT NULL,
-		server varchar(100) NOT NULL,
-		ign varchar(100) NOT NULL,
-		friendcode varchar(12) NOT NULL,
-		PRIMARY KEY (id, server)
-	)`
-	_, err := pvp.db.Exec(createSQL)
-	return err
 }
