@@ -7,6 +7,9 @@ import (
 	"net/http"
 
 	"github.com/Sigafoos/pvpservice/pvp"
+
+	"github.com/gocraft/dbr/v2"
+	"github.com/lib/pq"
 )
 
 type Handler struct {
@@ -46,9 +49,14 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 	err = h.pvp.Register(user)
 	if err != nil {
-		log.Printf("error registering user: %s", err)
-		// TODO 419 or 500
-		w.WriteHeader(http.StatusInternalServerError)
+		pqErr := err.(*pq.Error)
+		switch pqErr.Code {
+		case "23505":
+			w.WriteHeader(http.StatusConflict)
+		default:
+			log.Printf("error registering user: %s", err)
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
@@ -70,6 +78,41 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	b, err := json.Marshal(players)
 	if err != nil {
 		log.Printf("error marshalling player list: %s", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	w.Write(b)
+}
+
+func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	id := r.FormValue("id")
+	if id == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	player, err := h.pvp.GetPlayer(id)
+	if err != nil {
+		if err == dbr.ErrNotFound {
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			pqErr, ok := err.(*pq.Error)
+			if !ok {
+				log.Println(err)
+			} else {
+				log.Printf("%s: %s", pqErr.Code, pqErr.Message)
+			}
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		return
+	}
+	b, err := json.Marshal(player)
+	if err != nil {
+		log.Printf("error marshalling player: %s", err.Error())
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 	w.Write(b)

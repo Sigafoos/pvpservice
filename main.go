@@ -15,7 +15,7 @@ import (
 	"github.com/NYTimes/gziphandler"
 	"github.com/Sigafoos/middleware"
 	"github.com/Sigafoos/middleware/logger"
-	"github.com/gocraft/dbr"
+	"github.com/gocraft/dbr/v2"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -71,7 +71,8 @@ func main() {
 	h := handler.New(pvp)
 	mux := http.NewServeMux()
 	mux.Handle("/register", http.HandlerFunc(h.Register))
-	mux.Handle("/list", http.HandlerFunc(h.List))
+	mux.Handle("/player", http.HandlerFunc(h.Get))
+	mux.Handle("/player/list", http.HandlerFunc(h.List))
 
 	chain := gziphandler.GzipHandler(mux)
 	chain = middleware.UseJSON(chain)
