@@ -50,7 +50,7 @@ func (pvp *PVP) ListPlayers(server string) []Player {
 	return results
 }
 
-func (pvp *PVP) Register(user Player) error {
+func (pvp *PVP) CreateUser(user *Player) error {
 	session := pvp.db.NewSession(pvp.logger)
 	tx, err := session.Begin()
 	if err != nil {
@@ -67,13 +67,24 @@ func (pvp *PVP) Register(user Player) error {
 		return err
 	}
 
+	tx.Commit()
+	return nil
+}
+
+func (pvp *PVP) RegisterUser(user *Player) error {
+	session := pvp.db.NewSession(pvp.logger)
+	tx, err := session.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.RollbackUnlessCommitted()
+
 	_, err = tx.InsertInto("pvp_user_server").
 		Pair("user_id", user.ID).
 		Pair("server", user.Server).
 		Exec()
 
 	if err != nil {
-		// TODO figure out type
 		return err
 	}
 

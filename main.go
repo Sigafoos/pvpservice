@@ -71,7 +71,7 @@ func main() {
 	h := handler.New(pvp)
 	mux := http.NewServeMux()
 	mux.Handle("/register", http.HandlerFunc(h.Register))
-	mux.Handle("/player", http.HandlerFunc(h.Get))
+	mux.Handle("/player", http.HandlerFunc(h.Player))
 	mux.Handle("/player/list", http.HandlerFunc(h.List))
 
 	chain := gziphandler.GzipHandler(mux)
