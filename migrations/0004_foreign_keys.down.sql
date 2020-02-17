@@ -1,0 +1,2 @@
+ALTER TABLE pvp_user_server
+DROP CONSTRAINT pvp_user_server_user_fk;
