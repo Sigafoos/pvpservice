@@ -107,6 +107,19 @@ func (h *Handler) Player(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (h *Handler) Friendship(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		h.createFriendship(w, r)
+
+	case http.MethodGet:
+		h.getFriends(w, r)
+
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
 func (h *Handler) getPlayer(w http.ResponseWriter, r *http.Request) {
 	id := r.FormValue("id")
 	if id == "" {
@@ -149,4 +162,49 @@ func (h *Handler) getUserFromRequest(r *http.Request) *pvp.Player {
 	}
 
 	return &user
+}
+
+func (h *Handler) createFriendship(w http.ResponseWriter, r *http.Request) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	var f pvp.Friendship
+	err = json.Unmarshal(body, &f)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err = h.pvp.AddFriend(f)
+	if err != nil {
+		// TODO error checking
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+}
+
+func (h *Handler) getFriends(w http.ResponseWriter, r *http.Request) {
+	// TODO check if the user exists, as this won't throw an error
+	id := r.FormValue("id")
+	if id == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		// TODO an error message
+		return
+	}
+	friends, err := h.pvp.GetFriends(id)
+	if err != nil {
+		log.Println("error getting friends" + err.Error())
+		// TODO
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	b, err := json.Marshal(friends)
+	if err != nil {
+		log.Printf("error marshalling friend list: %s", err.Error())
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	w.Write(b)
 }

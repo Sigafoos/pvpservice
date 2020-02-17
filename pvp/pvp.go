@@ -25,6 +25,11 @@ func (p *Player) ToString() string {
 	return fmt.Sprintf("**FC**: %s | **IGN**: %s | **User**: %s | **Egg for Ultra?**: %s", p.FriendCode, p.IGN, p.Username, eggUltra)
 }
 
+type Friendship struct {
+	User   string `db:"user_id" json:"user"`
+	Friend string `db:"friend_id" json:"friend"`
+}
+
 type PVP struct {
 	db     *dbr.Connection
 	logger dbr.EventReceiver
@@ -120,4 +125,48 @@ func (pvp *PVP) GetPlayer(ID string) (*Player, error) {
 
 	p.Servers = servers
 	return &p, nil
+}
+
+func (pvp *PVP) AddFriend(f Friendship) error {
+	if f.User > f.Friend {
+		sorted := Friendship{
+			User:   f.Friend,
+			Friend: f.User,
+		}
+		f = sorted
+	}
+
+	session := pvp.db.NewSession(pvp.logger)
+	tx, err := session.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.RollbackUnlessCommitted()
+	_, err = tx.InsertInto("pvp_user_friendship").
+		Columns("user_id", "friend_id").
+		Record(&f).
+		Exec()
+
+	if err != nil {
+		return err
+	}
+	tx.Commit()
+	return nil
+}
+
+func (pvp *PVP) GetFriends(user string) ([]Player, error) {
+	var friends []Player
+
+	session := pvp.db.NewSession(pvp.logger)
+	session.Begin()
+	_, err := session.Select("id", "username", "ign", "friendcode", "egg_for_ultra").
+		From("pvp_user").
+		Join(dbr.UnionAll(
+			dbr.Select(dbr.I("user_id").As("uid"), dbr.I("friend_id").As("fid")).From("pvp_user_friendship"),
+			dbr.Select(dbr.I("friend_id").As("uid"), dbr.I("user_id").As("fid")).From("pvp_user_friendship"),
+		).As("puf"), "pvp_user.id = puf.fid").
+		Where("puf.uid = ?", user).
+		Load(&friends)
+
+	return friends, err
 }
